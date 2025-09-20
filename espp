@@ -741,44 +741,29 @@ local Connection = RunService.RenderStepped:Connect(function()
     for i, Object in pairs(ESP.Objects) do
         Object:Update()
     end
+-- China Hat ESP
+local Hat_Settings = ESP.Settings.China_Hat
+if Hat_Settings.Enabled and Head then
+    local headPos, headOnScreen = Camera:WorldToViewportPoint(Head.Position)
+    if headOnScreen then
+        local topPos = Camera:WorldToViewportPoint(Head.Position + Vector3.new(0, Hat_Settings.Height, 0))
+        local leftPos = Camera:WorldToViewportPoint(Head.Position + Vector3.new(-Hat_Settings.Radius, Hat_Settings.Offset, 0))
+        local rightPos = Camera:WorldToViewportPoint(Head.Position + Vector3.new(Hat_Settings.Radius, Hat_Settings.Offset, 0))
 
--- China Hat
-if ESP.Settings.China_Hat.Enabled and Head then
-    local hat = self.Components.China_Hat
-    if not hat then
-        hat = Framework:Draw("Triangle", {
-            Color = ESP.Settings.China_Hat.Color,
-            Transparency = ESP.Settings.China_Hat.Transparency,
-            Filled = true,
-            Thickness = 1,
-            Visible = false
-        })
-        self.Components.China_Hat = hat
+        if not self.Components.ChinaHat then
+            self.Components.ChinaHat = Drawing.new("Triangle")
+        end
+
+        local Hat = self.Components.ChinaHat
+        Hat.Visible = true
+        Hat.Color = Hat_Settings.Color
+        Hat.Transparency = Hat_Settings.Transparency
+        Hat.PointA = Vector2.new(topPos.X, topPos.Y)
+        Hat.PointB = Vector2.new(leftPos.X, leftPos.Y)
+        Hat.PointC = Vector2.new(rightPos.X, rightPos.Y)
     end
-
-    -- Get positions
-    local top3D = Head.Position + Vector3.new(0, ESP.Settings.China_Hat.Height + ESP.Settings.China_Hat.Offset, 0)
-    local left3D = Head.Position + Vector3.new(-ESP.Settings.China_Hat.Radius, ESP.Settings.China_Hat.Offset, 0)
-    local right3D = Head.Position + Vector3.new(ESP.Settings.China_Hat.Radius, ESP.Settings.China_Hat.Offset, 0)
-
-    local top, topVisible = Camera:WorldToViewportPoint(top3D)
-    local left, leftVisible = Camera:WorldToViewportPoint(left3D)
-    local right, rightVisible = Camera:WorldToViewportPoint(right3D)
-
-    if topVisible and leftVisible and rightVisible then
-        hat.PointA = Vector2.new(top.X, top.Y)
-        hat.PointB = Vector2.new(left.X, left.Y)
-        hat.PointC = Vector2.new(right.X, right.Y)
-        hat.Color = ESP.Settings.China_Hat.Color
-        hat.Transparency = ESP.Settings.China_Hat.Transparency
-        hat.Visible = true
-    else
-        hat.Visible = false
-    end
-else
-    if self.Components.China_Hat then
-        self.Components.China_Hat.Visible = false
-    end
+elseif self.Components.ChinaHat then
+    self.Components.ChinaHat.Visible = false
 end
 
 
