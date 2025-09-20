@@ -742,34 +742,52 @@ local Connection = RunService.RenderStepped:Connect(function()
         Object:Update()
     end
 
-    -- China Hat
-    local China_Hat_Settings = ESP.Settings.China_Hat
-    if ESP.Settings.China_Hat.Enabled then
-        local China_Hat = ESP.China_Hat
-        for i = 1, #ESP.China_Hat do
-            local Line, Triangle = China_Hat[i][1], China_Hat[i][2];
-            if LocalPlayer.Character ~= nil and LocalPlayer.Character:FindFirstChild('Head') and LocalPlayer.Character.Humanoid.Health > 0 then
-                local Position = LocalPlayer.Character.Head.Position + Vector3.new(0, China_Hat_Settings.Offset, 0);
-                local Last, Next = (i / 30) * math.pi*2, ((i + 1) / 30) * math.pi*2;
-                local lastScreen, onScreenLast = Camera:WorldToViewportPoint(Position + (Vector3.new(math.cos(Last), 0, math.sin(Last)) * China_Hat_Settings.Radius));
-                local nextScreen, onScreenNext = Camera:WorldToViewportPoint(Position + (Vector3.new(math.cos(Next), 0, math.sin(Next)) * China_Hat_Settings.Radius));
-                local topScreen, onScreenTop = Camera:WorldToViewportPoint(Position + Vector3.new(0, China_Hat_Settings.Height, 0));
-                if not onScreenLast or not onScreenNext or not onScreenTop then
-                    Line.Transparency = 0
-                    Triangle.Transparency = 0
-                    continue
-                end
-                Line.From = Vector2.new(lastScreen.X, lastScreen.Y);
-                Line.To = Vector2.new(nextScreen.X, nextScreen.Y);
-                Line.Color = China_Hat_Settings.Color
-                Line.Transparency = Framework:Drawing_Transparency(China_Hat_Settings.Transparency)
-                Triangle.PointA = Vector2.new(topScreen.X, topScreen.Y);
-                Triangle.PointB = Line.From;
-                Triangle.PointC = Line.To;
-                Triangle.Color = China_Hat_Settings.Color
-                Triangle.Transparency = Framework:Drawing_Transparency(China_Hat_Settings.Transparency)
+-- China Hat
+local Hat_Settings = ESP.Settings.China_Hat
+if Hat_Settings.Enabled and Head then
+    local HeadPos, OnScreen = Camera:WorldToViewportPoint(Head.Position + Vector3.new(0, Hat_Settings.Height, 0))
+    if OnScreen then
+        local BasePos = Vector2.new(HeadPos.X, HeadPos.Y)
+        local Segments = 24 -- smoothness of the circle
+        local Radius = Hat_Settings.Radius * (500 / (HRP_Position.Z + 1)) -- scale with distance
+        local LastPoint = nil
+
+        -- remove old hat drawings
+        if self.Components.China_Hat then
+            for _, obj in ipairs(self.Components.China_Hat) do
+                obj:Remove()
             end
         end
+        self.Components.China_Hat = {}
+
+        -- draw triangle fan (hat)
+        for i = 0, Segments do
+            local Angle = (i / Segments) * math.pi * 2
+            local Point = BasePos + Vector2.new(math.cos(Angle) * Radius, math.sin(Angle) * Radius)
+            if LastPoint then
+                local Tri = Framework:Draw("Triangle", {
+                    Color = Hat_Settings.Color,
+                    Transparency = Framework:Drawing_Transparency(Hat_Settings.Transparency),
+                    Thickness = 1,
+                    Visible = true,
+                    Filled = true,
+                    PointA = BasePos,
+                    PointB = LastPoint,
+                    PointC = Point
+                })
+                table.insert(self.Components.China_Hat, Tri)
+            end
+            LastPoint = Point
+        end
+    end
+else
+    if self.Components.China_Hat then
+        for _, obj in ipairs(self.Components.China_Hat) do
+            obj:Remove()
+        end
+        self.Components.China_Hat = nil
+    end
+end
     end
 end)
 
